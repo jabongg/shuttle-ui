@@ -8,6 +8,7 @@ const AvailableSlots = () => {
   const [slots, setSlots] = useState({});
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   // Fetch all venues on load
   useEffect(() => {
@@ -30,6 +31,7 @@ const AvailableSlots = () => {
       return;
     }
     setError("");
+    setSuccess("");
     setLoading(true);
 
     try {
@@ -45,6 +47,22 @@ const AvailableSlots = () => {
       setError("Failed to fetch available slots.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Book a slot
+  const bookSlot = async (courtId, startTime) => {
+    try {
+      const res = await axios.post("http://localhost:8080/bookings", {
+        courtId,
+        startTime,
+        date,
+      });
+      setSuccess(`✅ Slot booked successfully for ${startTime}`);
+      fetchSlots(); // refresh available slots
+    } catch (err) {
+      console.error("Booking error:", err);
+      setError("Failed to book slot. Please try again.");
     }
   };
 
@@ -88,14 +106,15 @@ const AvailableSlots = () => {
         Check Available Slots
       </button>
 
-      {/* Loading & Error */}
+      {/* Messages */}
       {loading && <p className="mt-4 text-blue-600">Loading slots...</p>}
       {error && <p className="mt-4 text-red-600">{error}</p>}
+      {success && <p className="mt-4 text-green-600">{success}</p>}
 
       {/* Slots Display */}
       <div className="mt-6">
         {Object.keys(slots).length > 0 ? (
-          Object.entries(slots).map(([court, { booked, available }]) => (
+          Object.entries(slots).map(([court, { booked, available, courtId }]) => (
             <div key={court} className="mb-6 p-4 border rounded shadow-sm">
               <h3 className="text-xl font-semibold mb-2">{court}</h3>
 
@@ -105,12 +124,13 @@ const AvailableSlots = () => {
                 <div className="flex flex-wrap gap-2">
                   {available.length > 0 ? (
                     available.map((time, idx) => (
-                      <span
+                      <button
                         key={idx}
-                        className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm"
+                        onClick={() => bookSlot(courtId, time)}
+                        className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm hover:bg-green-200"
                       >
-                        {time}
-                      </span>
+                        {time} (Book)
+                      </button>
                     ))
                   ) : (
                     <p className="text-gray-500">No available slots</p>
