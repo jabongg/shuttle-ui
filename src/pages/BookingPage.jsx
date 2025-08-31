@@ -24,7 +24,7 @@ function BookingPage() {
   };
 
   return (
-    <div>
+    <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-xl font-bold mb-4">Book a Court</h1>
       <form onSubmit={handleSubmit} className="space-y-3">
         <input
@@ -32,26 +32,26 @@ function BookingPage() {
           placeholder="Court ID"
           value={courtId}
           onChange={(e) => setCourtId(e.target.value)}
-          className="border p-2 w-full"
+          className="border rounded p-2 w-full"
         />
         <input
           type="number"
           placeholder="User ID"
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
-          className="border p-2 w-full"
+          className="border rounded p-2 w-full"
         />
         <input
           type="datetime-local"
           value={startTime}
           onChange={(e) => setStartTime(e.target.value)}
-          className="border p-2 w-full"
+          className="border rounded p-2 w-full"
         />
         <input
           type="datetime-local"
           value={endTime}
           onChange={(e) => setEndTime(e.target.value)}
-          className="border p-2 w-full"
+          className="border rounded p-2 w-full"
         />
         <button
           type="submit"

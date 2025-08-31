@@ -1,24 +1,32 @@
+// src/components/Navbar.jsx
 import { useState } from "react";
-import { Menu, X } from "lucide-react"; // icons
-import logo from "../images/shuttle-logo.png"; // replace with your logo path
+import { Menu, X, User } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import logo from "../images/shuttle-logo.png";
+import { isLoggedIn, logout, getUser } from "../utils/auth";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const navLinks = [
     { name: "Home", href: "/venues" },
     { name: "Venues", href: "/venues" },
     { name: "Bookings", href: "/bookings" },
-    {name: "Slots", href: "/available-slots"},
-    { name: "About", href: "/about" },
-    { name: "Contact", href: "/contact" },
+    { name: "Slots", href: "/available-slots" },
   ];
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const user = getUser();
 
   return (
     <nav className="bg-white shadow-md fixed w-full top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          
           {/* Logo */}
           <div className="flex items-center">
             <img src={logo} alt="ShuttleTime Logo" className="h-10 w-auto mr-2" />
@@ -27,7 +35,7 @@ function Navbar() {
           </div>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex space-x-8">
+          <div className="hidden md:flex space-x-8 items-center">
             {navLinks.map((link) => (
               <a
                 key={link.name}
@@ -37,6 +45,22 @@ function Navbar() {
                 {link.name}
               </a>
             ))}
+
+            {/* ✅ Show logged-in user + icon + logout */}
+            {isLoggedIn() && user && (
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-gray-700 font-medium">
+                  <User size={18} className="text-blue-600" />
+                  <span>Hi, {user.username}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Mobile Hamburger */}
@@ -61,6 +85,22 @@ function Navbar() {
                 {link.name}
               </a>
             ))}
+
+            {/* ✅ Mobile user + icon + logout */}
+            {isLoggedIn() && user && (
+              <div className="px-3 py-2 flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-gray-700 font-medium">
+                  <User size={18} className="text-blue-600" />
+                  <span>Hi, {user.username}</span>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition"
+                >
+                  Logout
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -1,15 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/axios";
 
-// // Map venue IDs to Unsplash images (dynamic background)
-// const venueImages = {
-//   1: "https://images.unsplash.com/photo-1598970434795-0c54fe7c0648", // badminton court
-//   2: "https://images.unsplash.com/photo-1517649763962-0c623066013b", // indoor stadium
-//   3: "https://images.unsplash.com/photo-1614102077882-bd03f87c5b29", // sports arena
-//   4: "https://images.unsplash.com/photo-1517649763962-0c623066013b", // hub
-//   5: "https://images.unsplash.com/photo-1521412644187-c49fa049e84d", // indoor courts
-// };
-
 import image1 from "../images/image1.jpg";
 import image2 from "../images/image2.jpg";
 import image3 from "../images/image3.jpg";
@@ -46,7 +37,7 @@ function VenueList() {
             backgroundPosition: "center",
           }}
         >
-          {/* Dark overlay for readability */}
+          {/* Dark overlay */}
           <div className="absolute inset-0 bg-black/60"></div>
 
           {/* Venue content */}
@@ -58,13 +49,20 @@ function VenueList() {
             </p>
             <p className="text-md mb-4">📞 {v.contactNumber}</p>
 
-            {/* Courts Section */}
-            <div className="bg-black/70 rounded-lg p-4 inline-block">
+            <div className="bg-black/70 rounded-lg p-4 inline-block mb-6">
               <p className="font-semibold mb-2">Courts:</p>
-              <ul className="list-disc list-inside text-sm">
+              <ul className="list-disc list-inside text-sm text-left">
                 {v.courts && v.courts.length > 0 ? (
                   v.courts.map((court) => (
-                    <li key={court.id}>{court.courtName}</li>
+                    <li key={court.id} className="flex justify-between items-center">
+                      <span>{court.courtName}</span>
+                      <a
+                        href={`/bookings`}
+                        className="inline-block px-4 py-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg shadow-lg transition duration-200 text-sm"
+                      >
+                        Book
+                      </a>
+                    </li>
                   ))
                 ) : (
                   <li>No courts available</li>
