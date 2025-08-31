@@ -1,22 +1,23 @@
-import { Routes, Route, Link } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import VenueList from "./pages/VenueList";
 import BookingPage from "./pages/BookingPage";
 import AvailableSlots from "./pages/AvailableSlots";
+import Navbar from "./components/Navbar"; // ✅ Import your Navbar
 
 function App() {
   return (
-    <div className="p-6">
-      <nav className="flex gap-4 mb-6">
-        <Link to="/venues" className="text-blue-600">Venues</Link>
-        <Link to="/book" className="text-blue-600">Book Court</Link>
-        <Link to="/available-slots">Available Slots</Link>
-      </nav>
+    <div>
+      {/* Navbar stays fixed at the top */}
+      <Navbar />
 
-      <Routes>
-        <Route path="/venues" element={<VenueList />} />
-        <Route path="/book" element={<BookingPage />} />
-        <Route path="/available-slots" element={<AvailableSlots />} />
-      </Routes>
+      {/* Page content */}
+      <div className="pt-20 px-6">
+        <Routes>
+          <Route path="/venues" element={<VenueList />} />
+          <Route path="/bookings" element={<BookingPage />} />
+          <Route path="/available-slots" element={<AvailableSlots />} />
+        </Routes>
+      </div>
     </div>
   );
 }
