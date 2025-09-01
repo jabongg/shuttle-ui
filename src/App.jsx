@@ -5,17 +5,19 @@ import BookingPage from "./pages/BookingPage";
 import AvailableSlots from "./pages/AvailableSlots";
 import LoginPage from "./pages/LoginPage";
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import { isLoggedIn } from "./utils/auth";
 
 function App() {
   const loggedIn = isLoggedIn();
 
   return (
-    <div>
+    <div className="flex flex-col min-h-screen">
       {/* ✅ Show Navbar only if user is logged in */}
       {loggedIn && <Navbar />}
 
-      <div className={loggedIn ? "pt-20 px-6" : ""}>
+      {/* ✅ Main Content (pushes footer down) */}
+      <main className={`flex-grow ${loggedIn ? "pt-20 px-6" : ""}`}>
         <Routes>
           {/* Public Route */}
           <Route path="/login" element={<LoginPage />} />
@@ -33,7 +35,10 @@ function App() {
             <Route path="*" element={<Navigate to="/login" />} />
           )}
         </Routes>
-      </div>
+      </main>
+
+      {/* ✅ Footer always at bottom */}
+      <Footer />
     </div>
   );
 }
