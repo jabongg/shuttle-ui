@@ -3,16 +3,14 @@ import { useState } from "react";
 import { Menu, X, User } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import logo from "../images/shuttle-logo.png";
-import { isLoggedIn, logout } from "../utils/auth";
+import { isLoggedIn, logout, getUser } from "../utils/auth";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
   const navLinks = [
-    { name: "Home", path: "/venues" },
     { name: "Venues", path: "/venues" },
-    { name: "Bookings", path: "/bookings" },
     { name: "Slots", path: "/available-slots" },
   ];
 
@@ -20,6 +18,8 @@ function Navbar() {
     logout();
     navigate("/login");
   };
+
+  const user = getUser();
 
   return (
     <nav className="bg-white shadow-md fixed w-full top-0 z-50">
@@ -51,7 +51,7 @@ function Navbar() {
               <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 text-gray-700 font-medium">
                   <User size={18} className="text-blue-600" />
-                  <span>Hi, admin</span>
+                  <span>Hi, {user?.name || "Guest"}</span>
                 </div>
                 <button
                   onClick={handleLogout}
