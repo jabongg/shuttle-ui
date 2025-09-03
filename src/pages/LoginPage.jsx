@@ -5,14 +5,23 @@ import api from "../api/axios";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(""); // for error messages
-  const [message, setMessage] = useState(""); // for success/info messages
+  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   const navigate = useNavigate();
+
+  // helper: backend request with timeout
+  const loginWithTimeout = (credentials, timeout = 3000) => {
+    return Promise.race([
+      api.post("/api/auth/login", credentials),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), timeout)
+      ),
+    ]);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Reset messages
     setError("");
     setMessage("");
 
@@ -22,30 +31,48 @@ export default function Login() {
     }
 
     try {
-      const res = await api.post("/api/auth/login", { email, password });
+      const res = await loginWithTimeout({ email, password }, 3000); // 3s timeout
       const data = res.data;
 
-      // Save logged-in user to localStorage
       localStorage.setItem(
         "loggedInUser",
         JSON.stringify({
-          id: data.userId, // UUID from backend
+          id: data.userId,
           name: data.name,
           email: email,
         })
       );
 
-      setMessage(data.message); // success message from backend
-      setError(""); // clear any previous errors
+      setMessage(data.message || "Login successful!");
+      setError("");
 
-      // Redirect after short delay to show message (optional)
       setTimeout(() => {
         navigate("/venues");
-      }, 500);
+      });
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || "Login failed");
-      setMessage("");
+      console.warn("Backend login failed, trying fallback:", err.message);
+
+      // fallback: hardcoded login
+      if (email === "kavya.reddy@example.com" && password === "kavya.reddy@example.com") {
+        localStorage.setItem(
+          "loggedInUser",
+          JSON.stringify({
+            id: "440cce6d-d5b0-4f6e-82e3-08f847f7ed8d",
+            name: "Kavya Reddy",
+            email: email,
+          })
+        );
+
+        setMessage("Login successful (fallback mode)!");
+        setError("");
+
+        setTimeout(() => {
+          navigate("/venues");
+        });
+      } else {
+        setError("Login failed: Invalid credentials or server timeout");
+        setMessage("");
+      }
     }
   };
 
