@@ -3,6 +3,8 @@ import { useState } from "react";
 import jsPDF from "jspdf";
 import QRCode from "qrcode";
 import logo from "../images/shuttle-logo.png";
+import paidStamp from "../images/paid-stamp-1.png";
+
 
 export default function BookingSuccess({ bookingId }) {
   const [loading, setLoading] = useState(false);
@@ -14,7 +16,7 @@ export default function BookingSuccess({ bookingId }) {
 
     try {
       // Fetch booking details from backend
-      const res = await fetch(`/api/bookings/${bookingId}`);
+      const res = await fetch(`http://localhost:8080/bookings/${bookingId}`);
       if (!res.ok) throw new Error("Failed to fetch booking details");
 
       const booking = await res.json();
@@ -25,24 +27,29 @@ export default function BookingSuccess({ bookingId }) {
       doc.setFontSize(16);
       doc.text("Booking Confirmation", 20, 40);
 
+//       {
+//     "bookingId": 502,
+//     "userName": "Priya Verma",
+//     "venueName": "Elite Sports Arena",
+//     "courtName": "Court C3",
+//     "bookingDate": "2025-09-03",
+//     "slotTime": "09:00 PM - 10:00 PM",
+//     "amount": 600.0
+// }
       doc.setFontSize(12);
-      doc.text(`Booking ID: ${booking.id}`, 20, 70);
+      doc.text(`Booking ID: ${booking.bookingId}`, 20, 70);
       doc.text(`Name: ${booking.userName}`, 20, 85);
       doc.text(`Venue: ${booking.venueName}`, 20, 100);
       doc.text(`Court: ${booking.courtName}`, 20, 115);
-      doc.text(`Date: ${booking.date}`, 20, 130);
+      doc.text(`Date: ${booking.bookingDate}`, 20, 130);
       doc.text(`Slot Time: ${booking.slotTime}`, 20, 145);
       doc.text(`Amount Paid: ₹${booking.amount}`, 20, 160);
+
 
       // Add Logo at top center
       const img = new Image();
       img.src = logo;
       doc.addImage(img, "PNG", 120, 10, 50, 30);
-
-      // Watermark
-      doc.setFontSize(70);
-      doc.setTextColor(0, 200, 0, 0.2);
-      doc.text("PAID", 150, 100, { align: "right", angle: 30 });
 
       // Title
       doc.setFontSize(20);
@@ -55,6 +62,12 @@ export default function BookingSuccess({ bookingId }) {
       });
       doc.addImage(qrDataUrl, "PNG", 220, 70, 50, 50);
 
+      // Add "PAID" stamp 
+      const stamp = new Image();
+      stamp.src = paidStamp;
+      doc.addImage(stamp, "PNG", 140, 120, 50, 40);
+
+            
       // Save PDF
       doc.save(`ticket-${bookingId}.pdf`);
     } catch (err) {
