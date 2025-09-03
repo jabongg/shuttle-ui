@@ -1,32 +1,65 @@
 // src/pages/BookingSuccess.jsx
 import { useState } from "react";
-import api from "../api/axios";
+import jsPDF from "jspdf";
+import QRCode from "qrcode";
+import logo from "../images/shuttle-logo.png";
 
 export default function BookingSuccess({ bookingId }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ✅ Ticket download handler
   const handleDownload = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      const res = await api.get(`/api/bookings/${bookingId}/ticket`, {
-        responseType: "blob", // important for PDF download
+      // Fetch booking details from backend
+      const res = await fetch(`/api/bookings/${bookingId}`);
+      if (!res.ok) throw new Error("Failed to fetch booking details");
+
+      const booking = await res.json();
+
+      // Generate PDF
+      const doc = new jsPDF("landscape");
+
+      doc.setFontSize(16);
+      doc.text("Booking Confirmation", 20, 40);
+
+      doc.setFontSize(12);
+      doc.text(`Booking ID: ${booking.id}`, 20, 70);
+      doc.text(`Name: ${booking.userName}`, 20, 85);
+      doc.text(`Venue: ${booking.venueName}`, 20, 100);
+      doc.text(`Court: ${booking.courtName}`, 20, 115);
+      doc.text(`Date: ${booking.date}`, 20, 130);
+      doc.text(`Slot Time: ${booking.slotTime}`, 20, 145);
+      doc.text(`Amount Paid: ₹${booking.amount}`, 20, 160);
+
+      // Add Logo at top center
+      const img = new Image();
+      img.src = logo;
+      doc.addImage(img, "PNG", 120, 10, 50, 30);
+
+      // Watermark
+      doc.setFontSize(70);
+      doc.setTextColor(0, 200, 0, 0.2);
+      doc.text("PAID", 150, 100, { align: "right", angle: 30 });
+
+      // Title
+      doc.setFontSize(20);
+      doc.setTextColor(40, 40, 40);
+      doc.text("Court Booking Ticket", 150, 50, { align: "center" });
+
+      // Generate QR Code
+      const qrDataUrl = await QRCode.toDataURL(`BookingID:${bookingId}`, {
+        width: 100,
       });
+      doc.addImage(qrDataUrl, "PNG", 220, 70, 50, 50);
 
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `ticket-${bookingId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
+      // Save PDF
+      doc.save(`ticket-${bookingId}.pdf`);
     } catch (err) {
-      console.error("❌ Error downloading ticket:", err);
-      setError("Failed to download ticket. Please try again.");
+      console.error(err);
+      setError("Failed to generate ticket. Please try again.");
     } finally {
       setLoading(false);
     }
