@@ -6,7 +6,8 @@ import logo from "../images/shuttle-logo.png";
 import paidStamp from "../images/paid-stamp-1.png";
 
 // Use environment variable for API base URL
-const API_BASE_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+console.log("BookingSuccess - API Base URL: " , API_BASE_URL);
 
 export default function BookingSuccess({ bookingId }) {
   const [loading, setLoading] = useState(false);
