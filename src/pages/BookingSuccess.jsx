@@ -43,8 +43,7 @@ export default function BookingSuccess({ bookingId }) {
       doc.text(`Court: ${booking.courtName}`, 20, 115);
       doc.text(`Date: ${booking.bookingDate}`, 20, 130);
       doc.text(`Slot Time: ${booking.slotTime}`, 20, 145);
-      doc.text(`Amount Paid: ₹${booking.amount}`, 20, 160);
-
+      doc.text(`Amount Paid: \u20B9${booking.amount}`, 20, 160); // adding ₹ rupee symbol
 
       // Add Logo at top center
       const img = new Image();
