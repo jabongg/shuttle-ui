@@ -5,6 +5,8 @@ import QRCode from "qrcode";
 import logo from "../images/shuttle-logo.png";
 import paidStamp from "../images/paid-stamp-1.png";
 
+// Use environment variable for API base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL;
 
 export default function BookingSuccess({ bookingId }) {
   const [loading, setLoading] = useState(false);
@@ -16,10 +18,7 @@ export default function BookingSuccess({ bookingId }) {
 
     try {
       // Fetch booking details from backend
-      //const res = await fetch(`http://localhost:8080/bookings/${bookingId}`);
-      const res = await fetch(`https://shuttletime.onrender.com/bookings/${bookingId}`);
-
-      
+      const res = await fetch(`${API_BASE_URL}/bookings/${bookingId}`);
       if (!res.ok) throw new Error("Failed to fetch booking details");
 
       const booking = await res.json();
@@ -30,15 +29,6 @@ export default function BookingSuccess({ bookingId }) {
       doc.setFontSize(16);
       doc.text("Booking Confirmation", 20, 40);
 
-//       {
-//     "bookingId": 502,
-//     "userName": "Priya Verma",
-//     "venueName": "Elite Sports Arena",
-//     "courtName": "Court C3",
-//     "bookingDate": "2025-09-03",
-//     "slotTime": "09:00 PM - 10:00 PM",
-//     "amount": 600.0
-// }
       doc.setFontSize(12);
       doc.text(`Booking ID: ${booking.bookingId}`, 20, 70);
       doc.text(`Name: ${booking.userName}`, 20, 85);
@@ -46,7 +36,7 @@ export default function BookingSuccess({ bookingId }) {
       doc.text(`Court: ${booking.courtName}`, 20, 115);
       doc.text(`Date: ${booking.bookingDate}`, 20, 130);
       doc.text(`Slot Time: ${booking.slotTime}`, 20, 145);
-      doc.text(`Amount Paid: \u20B9${booking.amount}`, 20, 160); // adding ₹ rupee symbol
+      doc.text(`Amount Paid: \u20B9${booking.amount}`, 20, 160);
 
       // Add Logo at top center
       const img = new Image();
@@ -64,12 +54,11 @@ export default function BookingSuccess({ bookingId }) {
       });
       doc.addImage(qrDataUrl, "PNG", 220, 70, 50, 50);
 
-      // Add "PAID" stamp 
+      // Add "PAID" stamp
       const stamp = new Image();
       stamp.src = paidStamp;
       doc.addImage(stamp, "PNG", 140, 120, 50, 40);
 
-            
       // Save PDF
       doc.save(`ticket-${bookingId}.pdf`);
     } catch (err) {

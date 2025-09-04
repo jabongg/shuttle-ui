@@ -1,6 +1,11 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
+// Use env variable for API base URL
+const api = axios.create({
+  baseURL: process.env.REACT_APP_API_URL,
+});
+
 const AvailableSlots = () => {
   const [venues, setVenues] = useState([]);
   const [venueId, setVenueId] = useState("");
@@ -14,8 +19,7 @@ const AvailableSlots = () => {
   useEffect(() => {
     const fetchVenues = async () => {
       try {
-        //const res = await axios.get("http://localhost:8080/venues");
-        const res = await axios.get("https://shuttletime.onrender.com/venues");
+        const res = await api.get("/venues");
         setVenues(res.data);
       } catch (err) {
         console.error("Error fetching venues:", err);
@@ -36,13 +40,9 @@ const AvailableSlots = () => {
     setLoading(true);
 
     try {
-      const response = await axios.get(
-       // "http://localhost:8080/bookings/slots/venue/available",
-       "https://shuttletime.onrender.com/bookings/slots/venue/available",
-        {
-          params: { venueId, date },
-        }
-      );
+      const response = await api.get("/bookings/slots/venue/available", {
+        params: { venueId, date },
+      });
       setSlots(response.data);
     } catch (err) {
       console.error(err);
@@ -55,9 +55,7 @@ const AvailableSlots = () => {
   // Book a slot
   const bookSlot = async (courtId, startTime) => {
     try {
-      //const res = await axios.post("http://localhost:8080/bookings", {
-        const res = await axios.post("https://shuttletime.onrender.com/bookings", {
-
+      const res = await api.post("/bookings", {
         courtId,
         startTime,
         date,
