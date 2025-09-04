@@ -16,7 +16,10 @@ export default function BookingSuccess({ bookingId }) {
 
     try {
       // Fetch booking details from backend
-      const res = await fetch(`http://localhost:8080/bookings/${bookingId}`);
+      //const res = await fetch(`http://localhost:8080/bookings/${bookingId}`);
+      const res = await fetch(`https://shuttletime.onrender.com/bookings/${bookingId}`);
+
+      
       if (!res.ok) throw new Error("Failed to fetch booking details");
 
       const booking = await res.json();

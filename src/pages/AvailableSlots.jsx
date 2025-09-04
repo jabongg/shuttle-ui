@@ -14,7 +14,8 @@ const AvailableSlots = () => {
   useEffect(() => {
     const fetchVenues = async () => {
       try {
-        const res = await axios.get("http://localhost:8080/venues");
+        //const res = await axios.get("http://localhost:8080/venues");
+        const res = await axios.get("https://shuttletime.onrender.com/venues");
         setVenues(res.data);
       } catch (err) {
         console.error("Error fetching venues:", err);
@@ -36,7 +37,8 @@ const AvailableSlots = () => {
 
     try {
       const response = await axios.get(
-        "http://localhost:8080/bookings/slots/venue/available",
+       // "http://localhost:8080/bookings/slots/venue/available",
+       "https://shuttletime.onrender.com/bookings/slots/venue/available",
         {
           params: { venueId, date },
         }
@@ -53,7 +55,9 @@ const AvailableSlots = () => {
   // Book a slot
   const bookSlot = async (courtId, startTime) => {
     try {
-      const res = await axios.post("http://localhost:8080/bookings", {
+      //const res = await axios.post("http://localhost:8080/bookings", {
+        const res = await axios.post("https://shuttletime.onrender.com/bookings", {
+
         courtId,
         startTime,
         date,
