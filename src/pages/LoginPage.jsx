@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
+import {jwtDecode} from "jwt-decode";
 import api from "../api/axios";
 
 export default function Login() {
@@ -17,6 +19,44 @@ export default function Login() {
         setTimeout(() => reject(new Error("timeout")), timeout)
       ),
     ]);
+  };
+
+  // Google login success handler
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const decoded = jwtDecode(credentialResponse.credential);
+
+      // Send token to backend for verification & login
+      const res = await api.post("/api/auth/google", {
+        token: credentialResponse.credential,
+      });
+
+      const data = res.data;
+
+      localStorage.setItem(
+        "loggedInUser",
+        JSON.stringify({
+          id: data.userId,
+          name: decoded.name,
+          email: decoded.email,
+        })
+      );
+
+      setMessage("Google login successful!");
+      setError("");
+
+      setTimeout(() => {
+        navigate("/venues");
+      });
+    } catch (err) {
+      console.error("Google login error:", err);
+      setError("Google login failed. Please try again.");
+    }
+  };
+
+  // Google login failure handler
+  const handleGoogleFailure = () => {
+    setError("Google login failed. Try again.");
   };
 
   const handleSubmit = async (e) => {
@@ -78,33 +118,50 @@ export default function Login() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
-      <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md w-80">
+      <div className="bg-white p-6 rounded shadow-md w-80">
         <h2 className="text-xl font-bold mb-4">Login</h2>
 
         {error && <p className="text-red-500 mb-2">{error}</p>}
         {message && <p className="text-green-500 mb-2">{message}</p>}
 
-        <input
-          type="text"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full p-2 mb-3 border rounded"
+        {/* Email/Password Login */}
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full p-2 mb-3 border rounded"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full p-2 mb-3 border rounded"
+          />
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
+          >
+            Login
+          </button>
+        </form>
+
+        {/* Divider */}
+        <div className="my-4 flex items-center">
+          <hr className="flex-grow border-gray-300" />
+          <span className="mx-2 text-gray-400">or</span>
+          <hr className="flex-grow border-gray-300" />
+        </div>
+
+        {/* Google Login */}
+        <GoogleLogin
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleFailure}
+          useOneTap
         />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          className="w-full p-2 mb-3 border rounded"
-        />
-        <button
-          type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600"
-        >
-          Login
-        </button>
-      </form>
+      </div>
     </div>
   );
 }
