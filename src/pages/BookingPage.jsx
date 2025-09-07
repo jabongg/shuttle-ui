@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import api from "../api/axios";
 import { getUser } from "../utils/auth";
-import BookingSuccess from "./BookingSuccess"; // ✅ import
+import BookingSuccess from "./BookingSuccess";
 
 function BookingPage() {
   const location = useLocation();
@@ -18,7 +18,7 @@ function BookingPage() {
 
   const formRef = useRef(null);
 
-  // ✅ Fetch venues and selected court
+  // ✅ Fetch venues
   useEffect(() => {
     api
       .get("/venues")
@@ -45,7 +45,7 @@ function BookingPage() {
     if (formRef.current) formRef.current.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // ✅ Handle booking & payment
+  // ✅ OLD FLOW → Direct API booking (kept as is)
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -77,11 +77,70 @@ function BookingPage() {
       const res = await api.post("api/payments", payload);
 
       setMessage({ type: "success", text: "Payment successful & booking confirmed!" });
-      setTransaction(res.data); // ✅ store transaction
+      setTransaction(res.data);
       console.log("Payment + Booking response:", res.data);
     } catch (err) {
       console.error(err);
       setMessage({ type: "error", text: "Payment/Booking failed" });
+    }
+  };
+
+  // ✅ NEW FLOW → Razorpay Checkout
+  const handleRazorpayPayment = async () => {
+    const loggedInUser = getUser();
+    if (!loggedInUser) {
+      setMessage({ type: "error", text: "You must be logged in to book a court." });
+      return;
+    }
+
+    if (!selectedCourtInfo || !startTime || !endTime) {
+      setMessage({ type: "error", text: "All fields are required" });
+      return;
+    }
+
+    try {
+      // 1️⃣ Create order in backend
+      const orderRes = await api.post("/razorpay/create-order", {
+        amount: selectedCourtInfo.price,
+        currency: "INR",
+      });
+
+      const { id: orderId, amount, currency } = orderRes.data;
+
+      // 2️⃣ Razorpay checkout config
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY,
+        amount,
+        currency,
+        name: "ShuttleTime",
+        description: "Court Booking Payment",
+        order_id: orderId,
+        handler: async (response) => {
+          try {
+            // 3️⃣ Verify + create booking in backend
+            const verifyRes = await api.post("/payments/verify", {
+              userId: loggedInUser.id,
+              courtId: selectedCourtInfo.id,
+              startTime,
+              endTime,
+              ...response,
+            });
+
+            setMessage({ type: "success", text: "Booking confirmed via Razorpay!" });
+            setTransaction(verifyRes.data);
+          } catch (err) {
+            console.error("Payment verification failed:", err);
+            setMessage({ type: "error", text: "Payment verification failed" });
+          }
+        },
+        theme: { color: "#3399cc" },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      console.error("Error creating order:", err);
+      setMessage({ type: "error", text: "Payment initialization failed" });
     }
   };
 
@@ -93,7 +152,6 @@ function BookingPage() {
     const startDate = new Date(newStart);
     if (!isNaN(startDate)) {
       const endDate = new Date(startDate.getTime() + 60 * 60 * 1000);
-
       const pad = (num) => String(num).padStart(2, "0");
       const formatted =
         `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(endDate.getDate())}T` +
@@ -151,11 +209,21 @@ function BookingPage() {
           className="border rounded p-2 w-full"
         />
 
+        {/* Old direct API submit */}
         <button
           type="submit"
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition"
         >
-          Pay & Book
+          Pay & Book (Direct API)
+        </button>
+
+        {/* New Razorpay payment */}
+        <button
+          type="button"
+          onClick={handleRazorpayPayment}
+          className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600 transition ml-3"
+        >
+          Pay with Razorpay
         </button>
       </form>
     </div>

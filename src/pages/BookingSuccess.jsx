@@ -35,9 +35,8 @@ export default function BookingSuccess({ bookingId }) {
       doc.text(`Name: ${booking.userName}`, 20, 85);
       doc.text(`Venue: ${booking.venueName}`, 20, 100);
       doc.text(`Court: ${booking.courtName}`, 20, 115);
-      doc.text(`Date: ${booking.bookingDate}`, 20, 130);
-      doc.text(`Slot Time: ${booking.slotTime}`, 20, 145);
-      doc.text(`Amount Paid: \u20B9${booking.amount}`, 20, 160);
+       doc.text(`Slot Time: ${booking.slotTime}`, 20, 145);
+      doc.text(`Amount Paid: \u20B9 ${booking.amount}`, 20, 160);
 
       // Add Logo at top center
       const img = new Image();

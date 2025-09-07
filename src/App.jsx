@@ -7,6 +7,7 @@ import LoginPage from "./pages/LoginPage";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { isLoggedIn } from "./utils/auth";
+import Razorpay from "./pages/Razorpay";
 
 function App() {
   const loggedIn = isLoggedIn();
@@ -29,6 +30,7 @@ function App() {
               <Route path="/bookings" element={<BookingPage />} />
               <Route path="/available-slots" element={<AvailableSlots />} />
               <Route path="*" element={<Navigate to="/venues" />} />
+              <Route path="/razorpay" element={<Razorpay />} />
             </>
           ) : (
             // If not logged in, redirect everything to login
