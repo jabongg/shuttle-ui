@@ -11,6 +11,7 @@ const Razorpay = () => {
 
     const handlePayment = async () => {
         try {
+            console.log("Creating order with amount:", amount);
             const response = await axios.post(`${API_BASE_URL}/razorpay/create-order?amount=${selectedCourtInfo.price}`
         );
 

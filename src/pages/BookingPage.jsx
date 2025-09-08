@@ -99,17 +99,28 @@ function BookingPage() {
     }
 
     try {
-      // 1️⃣ Create order in backend
-      const orderRes = await api.post("/razorpay/create-order", {
-        amount: selectedCourtInfo.price,
-        currency: "INR",
-      });
+      
+      // 1️⃣ Create order in backend using query param
+      const orderRes = await api.post(
+        `/razorpay/create-order?amount=${selectedCourtInfo.price}`
+      );
 
       const { id: orderId, amount, currency } = orderRes.data;
 
+      console.log("All env vars:", import.meta.env);
+
+      // Load Razorpay key from env
+      const key = import.meta.env.VITE_RAZORPAY_KEY;
+      console.log("Loaded Razorpay key_id:", key); // 👈 Debug log
+  
+      if (!key) {
+        console.error("❌ Razorpay key_id is missing! Check your .env file.");
+        return;
+      }
+  
       // 2️⃣ Razorpay checkout config
       const options = {
-        key: import.meta.env.VITE_RAZORPAY_KEY,
+        key: key, // Enter the Key ID generated from the razorpay Dashboard
         amount,
         currency,
         name: "ShuttleTime",
