@@ -18,7 +18,7 @@ function BookingPage() {
 
   const formRef = useRef(null);
 
-  // ✅ Fetch venues
+  // Fetch venues
   useEffect(() => {
     api
       .get("/venues")
@@ -40,12 +40,12 @@ function BookingPage() {
       .catch((err) => console.error(err));
   }, [initialCourtId]);
 
-  // ✅ Scroll to form
+  // Scroll to form
   useEffect(() => {
     if (formRef.current) formRef.current.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // ✅ OLD FLOW → Direct API booking (kept as is)
+  // OLD FLOW → Direct API booking
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -74,7 +74,7 @@ function BookingPage() {
         endTime,
       };
 
-      const res = await api.post("api/payments", payload);
+      const res = await api.post("/api/payments", payload);
 
       setMessage({ type: "success", text: "Payment successful & booking confirmed!" });
       setTransaction(res.data);
@@ -85,7 +85,7 @@ function BookingPage() {
     }
   };
 
-  // ✅ NEW FLOW → Razorpay Checkout
+  // NEW FLOW → Razorpay Checkout
   const handleRazorpayPayment = async () => {
     const loggedInUser = getUser();
     if (!loggedInUser) {
@@ -99,28 +99,24 @@ function BookingPage() {
     }
 
     try {
-      
-      // 1️⃣ Create order in backend using query param
+      // 1️⃣ Create order using request param
       const orderRes = await api.post(
         `/razorpay/create-order?amount=${selectedCourtInfo.price}`
       );
 
       const { id: orderId, amount, currency } = orderRes.data;
 
-      console.log("All env vars:", import.meta.env);
-
-      // Load Razorpay key from env
+      // Debug: check key
       const key = import.meta.env.VITE_RAZORPAY_KEY;
-      console.log("Loaded Razorpay key_id:", key); // 👈 Debug log
-  
+      console.log("Loaded Razorpay key:", key);
       if (!key) {
-        console.error("❌ Razorpay key_id is missing! Check your .env file.");
+        console.error("❌ Razorpay key is missing in env!");
         return;
       }
-  
-      // 2️⃣ Razorpay checkout config
+
+      // 2️⃣ Razorpay checkout options
       const options = {
-        key: key, // Enter the Key ID generated from the razorpay Dashboard
+        key: key,
         amount,
         currency,
         name: "ShuttleTime",
@@ -128,17 +124,22 @@ function BookingPage() {
         order_id: orderId,
         handler: async (response) => {
           try {
-            // 3️⃣ Verify + create booking in backend
-            const verifyRes = await api.post("/payments/verify", {
+            // 3️⃣ Verify payment + create booking in backend
+            const verifyRes = await api.post("/razorpay/verify", {
               userId: loggedInUser.id,
               courtId: selectedCourtInfo.id,
               startTime,
               endTime,
-              ...response,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpayOrderId: response.razorpay_order_id,
+              razorpaySignature: response.razorpay_signature,
             });
 
             setMessage({ type: "success", text: "Booking confirmed via Razorpay!" });
-            setTransaction(verifyRes.data);
+            setTransaction({
+              bookingId: verifyRes.data.bookingId || orderId,
+              ...verifyRes.data,
+            });
           } catch (err) {
             console.error("Payment verification failed:", err);
             setMessage({ type: "error", text: "Payment verification failed" });
@@ -155,7 +156,7 @@ function BookingPage() {
     }
   };
 
-  // ⏰ Auto-set end time = +1 hr
+  // Auto-set end time = +1 hr
   const handleStartTimeChange = (e) => {
     const newStart = e.target.value;
     setStartTime(newStart);
@@ -167,12 +168,11 @@ function BookingPage() {
       const formatted =
         `${endDate.getFullYear()}-${pad(endDate.getMonth() + 1)}-${pad(endDate.getDate())}T` +
         `${pad(endDate.getHours())}:${pad(endDate.getMinutes())}`;
-
       setEndTime(formatted);
     }
   };
 
-  // ✅ After success → show ticket
+  // Show BookingSuccess after transaction
   if (transaction?.bookingId) {
     return <BookingSuccess bookingId={transaction.bookingId} transaction={transaction} />;
   }
@@ -228,7 +228,7 @@ function BookingPage() {
           Pay & Book (Direct API)
         </button>
 
-        {/* New Razorpay payment */}
+        {/* Razorpay payment */}
         <button
           type="button"
           onClick={handleRazorpayPayment}
