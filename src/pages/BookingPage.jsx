@@ -128,6 +128,7 @@ function BookingPage() {
             const verifyRes = await api.post("/razorpay/verify", {
               userId: loggedInUser.id,
               courtId: selectedCourtInfo.id,
+              amount,
               startTime,
               endTime,
               razorpayPaymentId: response.razorpay_payment_id,
