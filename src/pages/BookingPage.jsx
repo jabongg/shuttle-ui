@@ -45,6 +45,29 @@ function BookingPage() {
     if (formRef.current) formRef.current.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  // ✅ helper to send notifications
+  const sendBookingNotifications = async (bookingDetails) => {
+    try {
+      // 1. Email
+      await api.post("/notification/email", {
+        recipient: bookingDetails.email,
+        subject: "Booking Confirmed - ShuttleTime",
+        message: `Hello ${bookingDetails.name},\n\nYour booking is confirmed!\n\nCourt: ${bookingDetails.courtName}\nStart: ${bookingDetails.startTime}\nEnd: ${bookingDetails.endTime}\nAmount Paid: ₹${bookingDetails.amount}\n\nThank you for booking with ShuttleTime.`,
+      });
+
+      // // 2. SMS
+      // await api.post("/notification/sms", {
+      //   recipient: bookingDetails.phone,
+      //   message: `✅ Booking confirmed!\nCourt: ${bookingDetails.courtName}\nStart: ${bookingDetails.startTime}\nAmount: ₹${bookingDetails.amount}`,
+      // });
+      //alert("SMS notification skipped in demo.");
+      alert("Email notification sent (check inbox/spam).");
+      console.log("Notifications sent successfully ✅");
+    } catch (err) {
+      console.error("Failed to send notifications:", err);
+    }
+  };
+
   // OLD FLOW → Direct API booking
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -79,6 +102,17 @@ function BookingPage() {
       setMessage({ type: "success", text: "Payment successful & booking confirmed!" });
       setTransaction(res.data);
       console.log("Payment + Booking response:", res.data);
+
+      // 🔔 Send notifications (direct booking flow)
+      await sendBookingNotifications({
+        name: loggedInUser.name || "User",
+        email: loggedInUser.email,
+        phone: loggedInUser.phone,
+        courtName: selectedCourtInfo.courtName,
+        startTime,
+        endTime,
+        amount: selectedCourtInfo.price,
+      });
     } catch (err) {
       console.error(err);
       setMessage({ type: "error", text: "Payment/Booking failed" });
@@ -99,22 +133,20 @@ function BookingPage() {
     }
 
     try {
-      // 1️⃣ Create order using request param
+      // 1️⃣ Create order
       const orderRes = await api.post(
         `/razorpay/create-order?amount=${selectedCourtInfo.price}`
       );
 
       const { id: orderId, amount, currency } = orderRes.data;
 
-      // Debug: check key
       const key = import.meta.env.VITE_RAZORPAY_KEY;
-      console.log("Loaded Razorpay key:", key);
       if (!key) {
         console.error("❌ Razorpay key is missing in env!");
         return;
       }
 
-      // 2️⃣ Razorpay checkout options
+      // 2️⃣ Razorpay checkout
       const options = {
         key: key,
         amount,
@@ -124,7 +156,7 @@ function BookingPage() {
         order_id: orderId,
         handler: async (response) => {
           try {
-            // 3️⃣ Verify payment + create booking in backend
+            // 3️⃣ Verify payment + booking
             const verifyRes = await api.post("/razorpay/verify", {
               userId: loggedInUser.id,
               courtId: selectedCourtInfo.id,
@@ -140,6 +172,17 @@ function BookingPage() {
             setTransaction({
               bookingId: verifyRes.data.bookingId || orderId,
               ...verifyRes.data,
+            });
+
+            // 🔔 Send notifications (after payment success)
+            await sendBookingNotifications({
+              name: loggedInUser.name || "User",
+              email: loggedInUser.email,
+              phone: loggedInUser.phone,
+              courtName: selectedCourtInfo.courtName,
+              startTime,
+              endTime,
+              amount: selectedCourtInfo.price,
             });
           } catch (err) {
             console.error("Payment verification failed:", err);
